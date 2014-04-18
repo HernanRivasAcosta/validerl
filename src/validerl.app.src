@@ -1,0 +1,12 @@
+{application, validerl,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { validerl_app, []}},
+  {env, []}
+ ]}.
