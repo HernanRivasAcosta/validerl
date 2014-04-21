@@ -71,6 +71,6 @@ first_satisfying(_F, []) ->
   undefined;
 first_satisfying(F, [H | T]) ->
   case V = F(H) of
-    true -> V;
+    true -> {ok, V};
     _    -> first_satisfying(F, T)
   end.
