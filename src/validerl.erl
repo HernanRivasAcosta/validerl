@@ -3,7 +3,7 @@
 
 -export([get_value/2]).
 -export([get_bool/1, get_int/1, get_int/2, get_string/1, get_int_list/1,
-         get_int_list/2]).
+         get_int_list/2, get_list/2, is_of_type/2]).
 
 -include("validerl.hrl").
 
@@ -17,6 +17,7 @@ get_value(Value, integer)            -> get_int(Value);
 get_value(Value, {integer, Bounds})  -> get_int(Value, Bounds);
 get_value(Value, int_list)           -> get_int_list(Value);
 get_value(Value, {int_list, Bounds}) -> get_int_list(Value, Bounds);
+get_value(Value, {list, Type})       -> get_list(Value, Type);
 get_value(Value, Type)               -> validate_custom(Type, Value).
 
 -spec get_bool(any()) -> validerl_bool() | invaliderl_bool().
@@ -110,6 +111,19 @@ get_int_list(List, Bounds) when is_list(List) ->
 get_int_list(Other, _) ->
   {error, {invalid_integer_list, Other}}.
 
+-spec get_list(any(), atom() | [atom()]) -> {ok, [any()]} | {error, any()}.
+get_list(Term, Type) when is_atom(Type) ->
+  get_list(Term, [Type]);
+get_list(List, Types) when is_list(List) ->
+  F = fun(E) -> lists:any(fun(T) -> is_of_type(E, T) end, Types) end,
+  case lists:all(F, List) of
+    true -> List;
+    _    -> {error, bad_list_types}
+  end;
+get_list(Any, _Types) ->
+  {error, {not_a_list, Any}}.
+
+
 %%==============================================================================
 %% Utils
 %%==============================================================================
@@ -132,3 +146,18 @@ validate_custom({Module, Function}, Input) ->
   validate_custom({Module, {Function, []}}, Input);
 validate_custom(Module, Input) ->
   validate_custom({Module, validate}, Input).
+
+is_of_type(Element, _Type = atom) ->      is_atom(Element);
+is_of_type(Element, _Type = binary) ->    is_binary(Element);
+is_of_type(Element, _Type = bitstring) -> is_bitstring(Element);
+is_of_type(Element, _Type = boolean) ->   is_boolean(Element);
+is_of_type(Element, _Type = float) ->     is_float(Element);
+is_of_type(Element, _Type = integer) ->   is_integer(Element);
+is_of_type(Element, _Type = list) ->      is_list(Element);
+is_of_type(Element, _Type = number) ->    is_number(Element);
+is_of_type(Element, _Type = pid) ->       is_pid(Element);
+is_of_type(Element, _Type = port) ->      is_port(Element);
+is_of_type(Element, _Type = reference) -> is_reference(Element);
+is_of_type(Element, _Type = tuple) ->     is_tuple(Element);
+is_of_type(_Element, _Type = any) ->      true;
+is_of_type(_Element, _Type) ->            false.
