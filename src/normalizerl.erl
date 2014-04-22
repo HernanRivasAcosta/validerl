@@ -12,7 +12,8 @@
   {ok, [{any(), any()}]} | {errors, {atom(), any()}}.
 normalize_proplist(Schema, Proplist) ->
   GetValue = fun(ItemSchema) -> get_proplist_value(ItemSchema, Proplist) end,
-  IsError  = fun({Atom, _}) -> Atom =:= error end,
+  IsError  = fun({error, _}) -> true;
+                (_Other)     -> false end,
   case lists:partition(IsError, lists:map(GetValue, Schema)) of
     {[], Values} -> {ok, Values};
     {Errors, _}  -> {errors, [Reason || {error, Reason} <- Errors]}
@@ -28,16 +29,16 @@ get_proplist_value({Key, Type, Required, Constraints}, Proplist) ->
     {undefined, required} ->
       {error, {missing_property, Key}};
     {undefined, optional} ->
-      {ok, undefined};
+      undefined;
     {undefined, {default, Value}} ->
-      {ok, Value};
-    {{ok, Value}, _} ->
+      Value;
+    {{ok, {Key, Value}}, _} ->
       case {validerl:get_value(Value, Type), Constraints} of
         {{ok, Validated}, undefined} ->
-          {ok, Validated};
+          Validated;
         {{ok, Validated}, Constraints} ->
           case value_satisfies(Validated, Constraints) of
-            true -> {ok, Validated};
+            true -> Validated;
             false -> {error, {value_mismatch, Value}}
           end;
         Error ->
@@ -53,7 +54,7 @@ get_value_from_proplist(Key, Proplist) ->
     {false, false} ->
       undefined;
     {Tuple, _} ->
-      Tuple
+      {ok, Tuple}
   end.
 
 value_satisfies(Value, {matches, Value}) ->
@@ -71,6 +72,6 @@ first_satisfying(_F, []) ->
   undefined;
 first_satisfying(F, [H | T]) ->
   case V = F(H) of
-    true -> {ok, V};
+    true -> {ok, {H, V}};
     _    -> first_satisfying(F, T)
   end.

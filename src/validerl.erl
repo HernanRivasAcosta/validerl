@@ -2,8 +2,8 @@
 -author('hernanrivasacosta@gmail.com').
 
 -export([get_value/2]).
--export([get_bool/1, get_int/1, get_int/2, get_string/1, get_int_list/1,
-         get_int_list/2, get_list/2, is_of_type/2]).
+-export([get_bool/1, get_binary/1, get_int/1, get_int/2, get_string/1,
+         get_int_list/1, get_int_list/2, get_list/2, is_of_type/2, get_atom/1]).
 
 -include("validerl.hrl").
 
@@ -12,12 +12,14 @@
 %%==============================================================================
 -spec get_value(any(), validerl_type()) -> {ok, any()} | validerl_error().
 get_value(Value, boolean)            -> get_bool(Value);
+get_value(Value, binary)             -> get_binary(Value);
 get_value(Value, string)             -> get_string(Value);
 get_value(Value, integer)            -> get_int(Value);
 get_value(Value, {integer, Bounds})  -> get_int(Value, Bounds);
 get_value(Value, int_list)           -> get_int_list(Value);
 get_value(Value, {int_list, Bounds}) -> get_int_list(Value, Bounds);
 get_value(Value, {list, Type})       -> get_list(Value, Type);
+get_value(Value, atom)               -> get_atom(Value);
 get_value(Value, Type)               -> validate_custom(Type, Value).
 
 -spec get_bool(any()) -> validerl_bool() | invaliderl_bool().
@@ -34,6 +36,15 @@ get_bool(false)       -> {ok, false};
 get_bool(1)           -> {ok, true};
 get_bool(0)           -> {ok, false};
 get_bool(Bool)        -> {error, {invalid_boolean, Bool}}.
+
+-spec get_binary(any()) -> validerl_binary() | invaliderl_binary().
+get_binary(Bin) when is_binary(Bin) ->
+  {ok, Bin};
+get_binary(Other) ->
+  case get_string(Other) of
+    {ok, Value} -> {ok, list_to_binary(Value)};
+    {error, _}  -> {error, {invalid_binary, Other}}
+  end.
 
 -spec get_int(any()) -> validerl_int() | invaliderl_int().
 get_int(Int) when is_integer(Int) ->
@@ -64,7 +75,8 @@ get_int(Value, {LowerBound, UpperBound}) ->
 get_string(Bin) when is_binary(Bin) ->
   {ok, binary_to_list(Bin)};
 get_string(Str) when is_list(Str) ->
-  case lists:all(fun(C) -> is_integer(C) end, Str) of
+  F = fun(C) -> is_integer(C) andalso C >= 0 andalso C =< 255 end,
+  case lists:all(F, Str) of
     true -> {ok, Str};
     _    -> {error, {invalid_string, Str}}
   end;
@@ -123,6 +135,18 @@ get_list(List, Types) when is_list(List) ->
 get_list(Any, _Types) ->
   {error, {not_a_list, Any}}.
 
+-spec get_atom(any()) -> validerl_atom() | invaliderl_atom().
+get_atom(Atom) when is_atom(Atom) ->
+  {ok, Atom};
+get_atom(Bin) when is_binary(Bin) ->
+  {ok, binary_to_atom(Bin, latin1)};
+get_atom(List) when is_list(List) ->
+  case get_string(List) of
+    {ok, Str}  -> {ok, list_to_atom(Str)};
+    {error, _} -> {error, {invalid_atom, List}}
+  end;
+get_atom(Other) ->
+  {error, {invalid_atom, Other}}.
 
 %%==============================================================================
 %% Utils
