@@ -43,7 +43,10 @@ get_proplist_value({Key, Type, Required, Constraints}, Proplist) ->
           end;
         Error ->
           Error
-      end
+      end;
+    Any ->
+      lager:info("received ~p for ~p on ~p", [Any, Key, Proplist]),
+      {error, unknown}
   end.
 
 get_value_from_proplist(Key, Proplist) ->
@@ -71,7 +74,7 @@ value_satisfies(_Value, _Any) ->
 first_satisfying(_F, []) ->
   undefined;
 first_satisfying(F, [H | T]) ->
-  case V = F(H) of
-    true -> {ok, {H, V}};
-    _    -> first_satisfying(F, T)
+  case F(H) of
+    false -> first_satisfying(F, T);
+    Tuple -> {ok, Tuple}
   end.
