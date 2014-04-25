@@ -153,7 +153,7 @@ get_atom(Other) ->
 %%==============================================================================
 -spec validate_custom(validerl_ext_call(), any()) -> {ok, any()} |
                                                      {error, any()}.                
-validate_custom({Module, {Function, Args}}, Input) ->
+validate_custom({Module, Function, Args}, Input) ->
   try
     {ok, Value} = erlang:apply(Module, Function, [Input | Args])
   catch
@@ -167,7 +167,7 @@ validate_custom({Module, {Function, Args}}, Input) ->
       {error, {unexpected_error, {Class, Exception}}}
   end;
 validate_custom({Module, Function}, Input) ->
-  validate_custom({Module, {Function, []}}, Input);
+  validate_custom({Module, Function, []}, Input);
 validate_custom(Module, Input) ->
   validate_custom({Module, validate}, Input).
 

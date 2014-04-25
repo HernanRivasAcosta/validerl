@@ -47,7 +47,7 @@ get_proplist_value({Key, Type, Required, Constraints}, Proplist) ->
   end.
 
 get_value_from_proplist(Key, Proplist) ->
-  GetValue = fun(K) -> lists:keyfind(K, 1, Proplist) end,
+  GetValue = fun(K) -> lists:keyfind(K, 1, Proplist) =/= false end,
   case {GetValue(Key), is_list(Key)} of
     {false, true} ->
       first_satisfying(GetValue, Key);
