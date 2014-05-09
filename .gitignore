@@ -6,4 +6,5 @@ logs
 *.plt
 erl_crash.dump
 ebin
+*.packages.*
 *~
