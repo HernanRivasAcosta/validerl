@@ -3,24 +3,27 @@
 
 -export([get_value/2]).
 -export([get_bool/1, get_binary/1, get_int/1, get_int/2, get_string/1,
-         get_int_list/1, get_int_list/2, get_list/2, is_of_type/2, get_atom/1]).
+         get_int_list/1, get_int_list/2, get_list/2, is_of_type/2, get_atom/1,
+         get_tuple/2]).
 
 -include("validerl.hrl").
 
 %%==============================================================================
 %% API
 %%==============================================================================
--spec get_value(any(), validerl_type()) -> {ok, any()} | validerl_error().
-get_value(Value, boolean)            -> get_bool(Value);
-get_value(Value, binary)             -> get_binary(Value);
-get_value(Value, string)             -> get_string(Value);
-get_value(Value, integer)            -> get_int(Value);
-get_value(Value, {integer, Bounds})  -> get_int(Value, Bounds);
-get_value(Value, int_list)           -> get_int_list(Value);
-get_value(Value, {int_list, Bounds}) -> get_int_list(Value, Bounds);
-get_value(Value, {list, Type})       -> get_list(Value, Type);
-get_value(Value, atom)               -> get_atom(Value);
-get_value(Value, Type)               -> validate_custom(Type, Value).
+-spec get_value(any(), validerl_type())    -> validerl_value() |
+                                              invaliderl_value().
+get_value(Value, boolean)                  -> get_bool(Value);
+get_value(Value, binary)                   -> get_binary(Value);
+get_value(Value, string)                   -> get_string(Value);
+get_value(Value, integer)                  -> get_int(Value);
+get_value(Value, {integer, Bounds})        -> get_int(Value, Bounds);
+get_value(Value, int_list)                 -> get_int_list(Value);
+get_value(Value, {int_list, Bounds})       -> get_int_list(Value, Bounds);
+get_value(Value, {list, Type})             -> get_list(Value, Type);
+get_value(Value, atom)                     -> get_atom(Value);
+get_value(Value, Type) when is_tuple(Type) -> get_tuple(Value, Type);
+get_value(Value, Type)                     -> validate_custom(Type, Value).
 
 -spec get_bool(any()) -> validerl_bool() | invaliderl_bool().
 get_bool(<<"1">>)     -> {ok, true};
@@ -58,8 +61,7 @@ get_int(Str) when is_list(Str) ->
 get_int(Other) ->
   {error, {invalid_integer, Other}}.
 
--spec get_int(any(), bounds()) -> validerl_int() | invaliderl_int() |
-                                  out_of_range().
+-spec get_int(any(), bounds()) -> validerl_int() | invaliderl_int().
 get_int(Value, {LowerBound, UpperBound}) ->
   case get_int(Value) of
     {ok, Int} ->
@@ -92,8 +94,7 @@ get_int_list(Any) ->
   get_int_list(Any, {undefined, undefined}).
 
 -spec get_int_list(any(), bounds()) -> validerl_int_list() |
-                                       invaliderl_int_list() |
-                                       out_of_range().
+                                       invaliderl_int_list().
 get_int_list(Bin, Bounds) when is_binary(Bin) ->
   get_int_list(binary_to_list(Bin), Bounds);
 get_int_list(List, Bounds) when is_list(List) ->
@@ -148,10 +149,19 @@ get_atom(List) when is_list(List) ->
 get_atom(Other) ->
   {error, {invalid_atom, Other}}.
 
+-spec get_tuple(tuple(), tuple()) -> validerl_tuple() | invaliderl_tuple().
+get_tuple(Tuple, Type) ->
+  Types = tuple_to_list(Type),
+  Values = tuple_to_list(Tuple),
+  case get_values(Values, Types) of
+    {error, _Reason} = Error -> Error;
+    Any -> list_to_tuple(Any)
+  end.
+  
 %%==============================================================================
 %% Utils
 %%==============================================================================
--spec validate_custom(validerl_ext_call(), any()) -> {ok, any()} |
+-spec validate_custom(validerl_ext_call(), [any()]) -> {ok, any()} |
                                                      {error, any()}.                
 validate_custom({Module, Function, Args}, Input) ->
   try
@@ -185,3 +195,18 @@ is_of_type(Element, _Type = reference) -> is_reference(Element);
 is_of_type(Element, _Type = tuple) ->     is_tuple(Element);
 is_of_type(_Element, _Type = any) ->      true;
 is_of_type(_Element, _Type) ->            false.
+
+get_values(Values, Types) ->
+  get_values(Values, Types, []).
+
+get_values([], [], Acc) ->
+  lists:reverse(Acc);
+get_values([Value | Values], [Type | Types], Acc) ->
+  case get_value(Value, Type) of
+    {ok, ValidatedValue} ->
+      get_values(Values, Types, [ValidatedValue | Acc]);
+    Error ->
+      Error
+  end;
+get_values(Values, _Types, Acc) ->
+  {error, {bad_arity, length(Values) + length(Acc)}}.
