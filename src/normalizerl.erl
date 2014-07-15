@@ -44,13 +44,13 @@ get_proplist_value({Key, Type, Required, Constraints}, Proplist) ->
         Error ->
           Error
       end;
-    Any ->
+    {Any, Required} ->
       lager:info("received ~p for ~p on ~p", [Any, Key, Proplist]),
       {error, unknown}
   end.
 
 get_value_from_proplist(Key, Proplist) ->
-  GetValue = fun(K) -> lists:keyfind(K, 1, Proplist) =/= false end,
+  GetValue = fun(K) -> lists:keyfind(K, 1, Proplist) end,
   case {GetValue(Key), is_list(Key)} of
     {false, true} ->
       first_satisfying(GetValue, Key);
