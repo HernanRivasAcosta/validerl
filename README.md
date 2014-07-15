@@ -73,7 +73,7 @@ Simply call the funtions in the validerl module, you can validate multiple types
 
   ```erlang
   validerl:get_value([1, <<"2">>, 3, "4"], [integer]). % {ok, [1, 2, 3, 4]}
-  validerl:get_value([1, 2, 3, other], [integer]).     % {error, {error, {invalid_integer, other}}
+  validerl:get_value([1, 2, 3, other], [integer]).     % {error, {invalid_integer, other}
   ```
 
 * Function validation (uses a function to validate the value)
