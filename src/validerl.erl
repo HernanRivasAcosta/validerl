@@ -1,10 +1,9 @@
 -module(validerl).
 -author('hernanrivasacosta@gmail.com').
 
--export([get_value/2]).
+-export([get_value/2, is_of_type/2]).
 -export([get_bool/1, get_binary/1, get_int/1, get_int/2, get_string/1,
-         get_int_list/1, get_int_list/2, get_list/2, is_of_type/2, get_atom/1,
-         get_tuple/2]).
+         get_list/2, get_atom/1, get_tuple/2]).
 
 -include("validerl.hrl").
 
@@ -18,11 +17,9 @@ get_value(Value, binary)                   -> get_binary(Value);
 get_value(Value, string)                   -> get_string(Value);
 get_value(Value, integer)                  -> get_int(Value);
 get_value(Value, {integer, Bounds})        -> get_int(Value, Bounds);
-get_value(Value, int_list)                 -> get_int_list(Value);
-get_value(Value, {int_list, Bounds})       -> get_int_list(Value, Bounds);
-get_value(Value, {list, Type})             -> get_list(Value, Type);
 get_value(Value, atom)                     -> get_atom(Value);
 get_value(Value, Type) when is_tuple(Type) -> get_tuple(Value, Type);
+get_value(Value, [Type])                   -> get_list(Value, Type);
 get_value(Value, Type)                     -> validate_custom(Type, Value).
 
 -spec get_bool(any()) -> validerl_bool() | invaliderl_bool().
@@ -87,54 +84,22 @@ get_string(Atom) when is_atom(Atom) ->
 get_string(Other) ->
   {error, {invalid_string, Other}}.
 
-% This function might fail with inputs like [52, 54, 55], that is understood as
-% [4, 6, 7], this is the result of defaulting to think the input is a string
--spec get_int_list(any()) -> validerl_int_list() | invaliderl_int_list().
-get_int_list(Any) ->
-  get_int_list(Any, {undefined, undefined}).
+-spec get_list(any(), validerl_type()) -> {ok, any()} |
+                                          invaliderl_value().
+get_list(List, Type) ->
+  get_list(List, Type, []).
 
--spec get_int_list(any(), bounds()) -> validerl_int_list() |
-                                       invaliderl_int_list().
-get_int_list(Bin, Bounds) when is_binary(Bin) ->
-  get_int_list(binary_to_list(Bin), Bounds);
-get_int_list(List, Bounds) when is_list(List) ->
-  ValidChar = fun(C) ->
-                (C >= $0 andalso C =< $9) orelse C =:= $, orelse C =:= 32
-              end,
-  IsInteger = fun(C) ->
-                is_integer(C)
-              end,
-  case {lists:all(ValidChar, List), lists:all(IsInteger, List)} of
-    {true, _} -> 
-      Tokens = case lists:any(fun(C) -> C =:= $, end, List) of
-                true -> string:tokens([C || C <- List, C =/= 32], ",");
-                _    -> string:tokens(List, " ")
-              end,
-      F = fun([Int | T], Acc, Fun) ->
-                case get_int(Int, Bounds) of
-                  {ok, Value} -> Fun(T, [Value | Acc], Fun);
-                  Error       -> Error
-                end;
-             ([], Acc, _Fun) -> {ok, lists:reverse(Acc)}
-          end,
-      F(Tokens, [], F);
-    {_, true} -> {ok, List};
-    _         -> {error, {invalid_integer_list, List}}
+get_list([], Type, Acc) ->
+  {ok, lists:reverse(Acc)};
+get_list([H | T], Type, Acc) ->
+  case get_value(H, Type) of
+    {ok, Value} ->
+      get_list(T, Type, [Value | Acc]);
+    Error ->
+      Error
   end;
-get_int_list(Other, _) ->
-  {error, {invalid_integer_list, Other}}.
-
--spec get_list(any(), atom() | [atom()]) -> {ok, [any()]} | {error, any()}.
-get_list(Term, Type) when is_atom(Type) ->
-  get_list(Term, [Type]);
-get_list(List, Types) when is_list(List) ->
-  F = fun(E) -> lists:any(fun(T) -> is_of_type(E, T) end, Types) end,
-  case lists:all(F, List) of
-    true -> List;
-    _    -> {error, bad_list_types}
-  end;
-get_list(Any, _Types) ->
-  {error, {not_a_list, Any}}.
+get_list(NotAList, _Types, _Acc) ->
+  {error, {not_a_list, NotAList}}.
 
 -spec get_atom(any()) -> validerl_atom() | invaliderl_atom().
 get_atom(Atom) when is_atom(Atom) ->
