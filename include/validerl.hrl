@@ -2,7 +2,8 @@
                                {atom(), atom(), [any()]}.
 -type validerl_type()       :: boolean | string | integer | {integer, bounds()} |
                                integer_list | {integer_list, bounds(), tuple()} |
-                               validerl_ext_call() | [validerl_type()].
+                               validerl_ext_call() | [validerl_type()] |
+                               fun((any()) -> {ok, any()} | {error, any()}).
 
 %% Return types
 -type validerl_bool()       :: {ok, boolean()}.

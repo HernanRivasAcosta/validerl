@@ -40,6 +40,8 @@ get_bool(Bool)        -> {error, {invalid_boolean, Bool}}.
 -spec get_binary(any()) -> validerl_binary() | invaliderl_binary().
 get_binary(Bin) when is_binary(Bin) ->
   {ok, Bin};
+get_binary(Atom) when is_atom(Atom) ->
+  {ok, atom_to_binary(Atom, utf8)};
 get_binary(Other) ->
   case get_string(Other) of
     {ok, Value} -> {ok, list_to_binary(Value)};
@@ -89,7 +91,7 @@ get_string(Other) ->
 get_list(List, Type) ->
   get_list(List, Type, []).
 
-get_list([], Type, Acc) ->
+get_list([], _Type, Acc) ->
   {ok, lists:reverse(Acc)};
 get_list([H | T], Type, Acc) ->
   case get_value(H, Type) of
@@ -105,7 +107,7 @@ get_list(NotAList, _Types, _Acc) ->
 get_atom(Atom) when is_atom(Atom) ->
   {ok, Atom};
 get_atom(Bin) when is_binary(Bin) ->
-  {ok, binary_to_atom(Bin, latin1)};
+  {ok, binary_to_atom(Bin, utf8)};
 get_atom(List) when is_list(List) ->
   case get_string(List) of
     {ok, Str}  -> {ok, list_to_atom(Str)};
@@ -132,19 +134,27 @@ validate_custom({Module, Function, Args}, Input) ->
   try
     {ok, Value} = erlang:apply(Module, Function, [Input | Args])
   catch
-    error:undef ->
-      {error, {unexpected_type, Module}};
-    error:{Atom, Reason} when is_atom(Atom) ->
-      {error, {Atom, Reason}};
-    error:Reason ->
-      {error, {unexpected, Reason}};
-    Class:Exception ->
-      {error, {unexpected_error, {Class, Exception}}}
+    Class:Exception -> handle_custom_function_error(Class, Exception)
   end;
 validate_custom({Module, Function}, Input) ->
   validate_custom({Module, Function, []}, Input);
-validate_custom(Module, Input) ->
-  validate_custom({Module, validate}, Input).
+validate_custom(Module, Input) when is_atom(Module) ->
+  validate_custom({Module, validate}, Input);
+validate_custom(Fun, Input) ->
+  try
+    {ok, Value} = Fun(Input)
+  catch
+    Class:Exception -> handle_custom_function_error(Class, Exception)
+  end.
+
+handle_custom_function_error(error, undef) ->
+  {error, undefined_function};
+handle_custom_function_error(error, {Atom, Reason}) when is_atom(Atom) ->
+  {error, {Atom, Reason}};
+handle_custom_function_error(error, Reason) ->
+  {error, {unexpected, Reason}};
+handle_custom_function_error(Class, Exception) ->
+  {error, {unexpected_error, {Class, Exception}}}.
 
 is_of_type(Element, _Type = atom) ->      is_atom(Element);
 is_of_type(Element, _Type = binary) ->    is_binary(Element);
