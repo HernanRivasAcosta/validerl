@@ -16,6 +16,10 @@ get_value(Value, boolean)                   -> get_bool(Value);
 get_value(Value, binary)                    -> get_binary(Value);
 get_value(Value, string)                    -> get_string(Value);
 get_value(Value, integer)                   -> get_int(Value);
+get_value(Value, positive_integer)          -> get_int(Value, {1, undefined});
+get_value(Value, non_neg_integer)           -> get_int(Value, {0, undefined});
+get_value(Value, negative_integer)          -> get_int(Value, {undefined, 0});
+get_value(Value, non_pos_integer)           -> get_int(Value, {undefined, -1});
 get_value(Value, {integer, Bounds}) ->
   {Lower, Upper} = Bounds,
   % Take advantage of the fact that integers are not validerl types to
