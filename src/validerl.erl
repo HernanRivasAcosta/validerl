@@ -10,17 +10,25 @@
 %%==============================================================================
 %% API
 %%==============================================================================
--spec get_value(any(), validerl_type())    -> validerl_value() |
-                                              invaliderl_value().
-get_value(Value, boolean)                  -> get_bool(Value);
-get_value(Value, binary)                   -> get_binary(Value);
-get_value(Value, string)                   -> get_string(Value);
-get_value(Value, integer)                  -> get_int(Value);
-get_value(Value, {integer, Bounds})        -> get_int(Value, Bounds);
-get_value(Value, atom)                     -> get_atom(Value);
-get_value(Value, Type) when is_tuple(Type) -> get_tuple(Value, Type);
-get_value(Value, [Type])                   -> get_list(Value, Type);
-get_value(Value, Type)                     -> validate_custom(Type, Value).
+-spec get_value(any(), validerl_type())     -> validerl_value() |
+                                               invaliderl_value().
+get_value(Value, boolean)                   -> get_bool(Value);
+get_value(Value, binary)                    -> get_binary(Value);
+get_value(Value, string)                    -> get_string(Value);
+get_value(Value, integer)                   -> get_int(Value);
+get_value(Value, {integer, Bounds}) ->
+  {Lower, Upper} = Bounds,
+  % Take advantage of the fact that integers are not validerl types to
+  % distinguish an integer with bounds and a tuple
+  case is_integer(Lower) orelse is_integer(Upper) of
+    true -> get_int(Value, Bounds);
+    false -> get_tuple(Value, {integer, Bounds})
+  end;
+get_value(Value, atom)                      -> get_atom(Value);
+get_value(Value, Type) when is_tuple(Type)  -> get_tuple(Value, Type);
+get_value(Value, [Type])                    -> get_list(Value, Type);
+get_value(Value, any)                       -> {ok, Value};
+get_value(Value, Type)                      -> validate_custom(Type, Value).
 
 -spec get_bool(any()) -> validerl_bool() | invaliderl_bool().
 get_bool(<<"1">>)     -> {ok, true};
@@ -116,14 +124,16 @@ get_atom(List) when is_list(List) ->
 get_atom(Other) ->
   {error, {invalid_atom, Other}}.
 
--spec get_tuple(tuple(), tuple()) -> validerl_tuple() | invaliderl_tuple().
-get_tuple(Tuple, Type) ->
+-spec get_tuple(any(), tuple()) -> validerl_tuple() | invaliderl_tuple().
+get_tuple(Tuple, Type) when is_tuple(Tuple) ->
   Types = tuple_to_list(Type),
   Values = tuple_to_list(Tuple),
   case get_values(Values, Types) of
-    {error, _Reason} = Error -> Error;
-    Any -> list_to_tuple(Any)
-  end.
+    {ok, Data} -> {ok, list_to_tuple(Data)};
+    Error -> Error
+  end;
+get_tuple(NotATuple, _Type) ->
+  {error, {not_a_tuple, NotATuple}}.
   
 %%==============================================================================
 %% Utils
@@ -175,7 +185,7 @@ get_values(Values, Types) ->
   get_values(Values, Types, []).
 
 get_values([], [], Acc) ->
-  lists:reverse(Acc);
+  {ok, lists:reverse(Acc)};
 get_values([Value | Values], [Type | Types], Acc) ->
   case get_value(Value, Type) of
     {ok, ValidatedValue} ->
