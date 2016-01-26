@@ -1,3 +1,5 @@
+.erlang.mk/
+validerl.d
 .eunit
 deps
 logs

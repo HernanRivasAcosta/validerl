@@ -138,15 +138,15 @@ get_tuple(Tuple, Type) when is_tuple(Tuple) ->
   end;
 get_tuple(NotATuple, _Type) ->
   {error, {not_a_tuple, NotATuple}}.
-  
+
 %%==============================================================================
 %% Utils
 %%==============================================================================
 -spec validate_custom(validerl_ext_call(), [any()]) -> {ok, any()} |
-                                                     {error, any()}.                
+                                                     {error, any()}.
 validate_custom({Module, Function, Args}, Input) ->
   try
-    {ok, Value} = erlang:apply(Module, Function, [Input | Args])
+    {ok, _} = erlang:apply(Module, Function, [Input | Args])
   catch
     Class:Exception -> handle_custom_function_error(Class, Exception)
   end;
@@ -156,7 +156,7 @@ validate_custom(Module, Input) when is_atom(Module) ->
   validate_custom({Module, validate}, Input);
 validate_custom(Fun, Input) ->
   try
-    {ok, Value} = Fun(Input)
+    {ok, _} = Fun(Input)
   catch
     Class:Exception -> handle_custom_function_error(Class, Exception)
   end.
@@ -170,6 +170,7 @@ handle_custom_function_error(error, Reason) ->
 handle_custom_function_error(Class, Exception) ->
   {error, {unexpected_error, {Class, Exception}}}.
 
+-spec is_of_type(any(), atom()) -> boolean().
 is_of_type(Element, _Type = atom) ->      is_atom(Element);
 is_of_type(Element, _Type = binary) ->    is_binary(Element);
 is_of_type(Element, _Type = bitstring) -> is_bitstring(Element);

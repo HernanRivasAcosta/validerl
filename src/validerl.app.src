@@ -1,8 +1,7 @@
 {application,validerl,
              [{description,[]},
-              {vsn,"1"},
+              {vsn,"1.0.0"},
               {registered,[]},
               {applications,[kernel,stdlib]},
               {env,[]},
-              {lager,[{handlers,[{lager_console_backend,info}]}]},
               {modules,[validerl, normalizerl]}]}.
