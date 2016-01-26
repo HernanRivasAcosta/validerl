@@ -1,7 +1,12 @@
-{application,validerl,
-             [{description,[]},
-              {vsn,"1.0.0"},
-              {registered,[]},
-              {applications,[kernel,stdlib]},
-              {env,[]},
-              {modules,[validerl, normalizerl]}]}.
+{ application
+, validerl
+, [ {description, "Erlang input validation and normalization utilities"}
+  , {vsn, "1.0.0"}
+  , {applications, [kernel, stdlib]}
+  , {modules, [validerl, normalizerl]}
+  , {maintainers, ["Inaka"]}
+  , {licenses, ["Apache 2.0"]}
+  , {links, [{"Github","https://github.com/inaka/tirerl"}]}
+  , {build_tools, ["erlang.mk"]}
+  ]
+}.
