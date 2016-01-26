@@ -6,7 +6,7 @@
   , {modules, [validerl, normalizerl]}
   , {maintainers, ["Inaka"]}
   , {licenses, ["Apache 2.0"]}
-  , {links, [{"Github","https://github.com/inaka/tirerl"}]}
+  , {links, [{"Github","https://github.com/inaka/validerl"}]}
   , {build_tools, ["erlang.mk"]}
   ]
 }.
