@@ -1,4 +1,4 @@
 {alias, validerl, "./validerl/"}.
 {include, ["../include"]}.
-{cover, "./validerl.coverspec"}.
+{cover, "./cover.spec"}.
 {suites, validerl, [validerl_SUITE]}.

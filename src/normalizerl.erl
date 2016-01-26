@@ -45,7 +45,7 @@ get_proplist_value({Key, Type, Required, Constraints}, Proplist) ->
           Error
       end;
     {Any, Required} ->
-      lager:info("received ~p for ~p on ~p", [Any, Key, Proplist]),
+      error_logger:info_msg("received ~p for ~p on ~p", [Any, Key, Proplist]),
       {error, unknown}
   end.
 

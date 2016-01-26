@@ -4,5 +4,4 @@
               {registered,[]},
               {applications,[kernel,stdlib]},
               {env,[]},
-              {lager,[{handlers,[{lager_console_backend,info}]}]},
               {modules,[validerl, normalizerl]}]}.
