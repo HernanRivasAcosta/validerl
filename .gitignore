@@ -12,3 +12,5 @@ erl_crash.dump
 ebin
 *.packages.*
 *~
+_build/
+doc

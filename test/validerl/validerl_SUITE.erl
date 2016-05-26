@@ -32,7 +32,7 @@ check_get_value_binary(_Config) ->
                           case validerl:get_value(Value, binary) of
                               {ok, Bin} when is_binary(Bin) -> true;
                               {error, {invalid_binary, Value}} -> true;
-                              _Other -> ct:pal("~p", [_Other]), false
+                              _Other -> ct:log("~p", [_Other]), false
                           end),
     true = proper:quickcheck(Test_String),
     {comment, ""}.
