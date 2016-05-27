@@ -1,3 +1,7 @@
+hexer
+hexer.config
+.erlang.mk/
+validerl.d
 .eunit
 deps
 logs
@@ -8,3 +12,5 @@ erl_crash.dump
 ebin
 *.packages.*
 *~
+_build/
+doc

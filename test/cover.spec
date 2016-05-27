@@ -1,6 +1,5 @@
 {export, "./validerl/logs/cover"}.
 {level, details}.
-{incl_dirs, ["src/"]}.
 {incl_mods, [
              validerl,
              normalizerl
