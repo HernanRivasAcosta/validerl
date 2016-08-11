@@ -1,14 +1,27 @@
 # Change Log
 
+## [2.0.1](https://github.com/inaka/validerl/tree/2.0.1) (2016-08-11)
+[Full Changelog](https://github.com/inaka/validerl/compare/2.0.0...2.0.1)
+
+**Closed issues:**
+
+- wrong build tool [\#11](https://github.com/inaka/validerl/issues/11)
+
+**Merged pull requests:**
+
+- Update build\_tool [\#10](https://github.com/inaka/validerl/pull/10) ([Euen](https://github.com/Euen))
+
 ## [2.0.0](https://github.com/inaka/validerl/tree/2.0.0) (2016-05-26)
 [Full Changelog](https://github.com/inaka/validerl/compare/1.0.0...2.0.0)
 
 **Closed issues:**
 
+- Version Bump to 2.0.0 [\#8](https://github.com/inaka/validerl/issues/8)
 - Move from erlang.mk to rebar3 [\#6](https://github.com/inaka/validerl/issues/6)
 
 **Merged pull requests:**
 
+- \[Close \#8\] version bump 2.0.0 [\#9](https://github.com/inaka/validerl/pull/9) ([Euen](https://github.com/Euen))
 - \[Close \#6\] rebar3 support [\#7](https://github.com/inaka/validerl/pull/7) ([Euen](https://github.com/Euen))
 - \[\#fix\] fix link [\#5](https://github.com/inaka/validerl/pull/5) ([elbrujohalcon](https://github.com/elbrujohalcon))
 
