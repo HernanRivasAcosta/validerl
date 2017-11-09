@@ -1,12 +1,12 @@
 { application
 , validerl
 , [ {description, "Erlang input validation and normalization utilities"}
-  , {vsn, "2.0.0"}
+  , {vsn, "2.0.1"}
   , {applications, [kernel, stdlib]}
   , {modules, [validerl, normalizerl]}
   , {maintainers, ["Inaka"]}
   , {licenses, ["Apache 2.0"]}
   , {links, [{"Github","https://github.com/inaka/validerl"}]}
-  , {build_tools, ["erlang.mk"]}
+  , {build_tools, ["rebar3"]}
   ]
 }.
